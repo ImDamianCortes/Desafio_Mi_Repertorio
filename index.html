@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous" />
+</head>
+
+<body>
+  <div id="AgregarCancion" class="row">
+    <h2 class="py-3 col-12">&#119070; Mi repertorio &#119070;</h2>
+
+    <div class="card p-3 col-8 col-lg-3 bg-dark mx-auto my-2">
+      <div>
+        <div class="form-group row">
+          <label for="name" class="col-12 col-form-label">Canción:</label>
+          <div class="col-10 mx-auto">
+            <input type="text" class="form-control" id="cancion" value="A dios le pido" />
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="email" class="col-12 col-form-label">Artista: </label>
+          <div class="col-10 mx-auto">
+            <input type="text" class="form-control" id="artista" value="Juanes" />
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="rut" class="col-12 col-form-label">Tono:</label>
+          <div class="col-10 mx-auto">
+            <input type="text" class="form-control" id="tono" value="Em" />
+          </div>
+        </div>
+        <!-- url-Input -->
+        <div class="form-group row">
+          <label for="rut" class="col-12 col-form-label">Url</label>
+          <div class="col-10 mx-auto">
+            <input type="url" class="form-control" id="link"
+              value="https://www.youtube.com/watch?v=mCdA4bJAGGk" />
+          </div>
+        </div>
+        <!-- url-Input -->
+        <button onclick="nuevaCancion()" id="agregar" class="m-auto btn btn-success">
+          Agregar
+        </button>
+        <button onclick="editarCancion()" id="editar" class="m-auto btn btn-info">
+          Editar
+        </button>
+      </div>
+    </div>
+
+    <div id="ListaCanciones" class="card col-8 col-lg-8 my-2 bg-dark mx-auto">
+      <h2 class="card-header">Canciones &#127908;</h2>
+  
+      <div class="container mw-100">
+        <table class="table table-dark">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Canción</th>
+              <th scope="col">Artista</th>
+              <th scope="col">Tono</th>
+              <th scope="col">-</th>
+            </tr>
+          </thead>
+          <tbody id="cuerpo"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+  
+  <iframe id="video" width="745" height="419" src="" title="YouTube video player" frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen></iframe>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</body>
+
+</html>
+
+<style>
+  body {
+    text-align: center;
+    background: #5c4a72;
+    color: white;
+  }
+</style>
+
+<script>
+  let url = "http://localhost:3000/cancion";
+  let tbody = document.getElementById("cuerpo");
+  let cancion = document.getElementById("cancion");
+  let artista = document.getElementById("artista");
+  let tono = document.getElementById("tono");
+  let link = document.getElementById("link");
+
+  let canciones = [];
+  window.onload = getData();
+
+  async function getData() {
+    await axios.get(url + "es").then((data) => {
+      canciones = data.data;
+      tbody.innerHTML = "";
+      console.log(canciones)
+      canciones.forEach((c, i) => {
+        tbody.innerHTML += `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${c.cancion}</td>
+          <td>${c.artista}</td>
+          <td>${c.tono}</td>
+          <td>
+            <button class="btn btn-success" onclick="reproducirCancion(${i},'${c.id}')">Play</button>
+            <button class="btn btn-warning" onclick="prepararCancion(${i},'${c.id
+          }')">Editar</button>
+            <button class="btn btn-danger" onclick="eliminarCancion(${i},'${c.id
+          }')">Eliminar</button>
+          
+          </td>
+        </tr>
+      `;
+      });
+    });
+    cancion.value = "";
+    artista.value = "";
+    tono.value = "";
+  }
+
+  function nuevaCancion() {
+    cancion;
+    artista;
+    tono;
+    link;
+    let data = {
+      cancion: cancion.value,
+      artista: artista.value,
+      tono: tono.value,
+      link: link.value,
+    };
+    console.log(data);
+    axios.post(url, data).then(() => getData());
+  }
+
+  function eliminarCancion(i, id) {
+    axios.delete(url + "?id=" + id).then(() => {
+      alert("Canción " + canciones[i].cancion + " eliminada");
+      getData();
+    });
+  }
+
+  function prepararCancion(i, id) {
+    cancion.value = canciones[i].cancion;
+    artista.value = canciones[i].artista;
+    tono.value = canciones[i].tono;
+    link.value = canciones[i].link;
+    document
+      .getElementById("editar")
+      .setAttribute("onclick", `editarCancion('${id}')`);
+    document.getElementById("agregar").style.display = "none";
+    document.getElementById("editar").style.display = "block";
+  }
+
+  function editarCancion(id) {
+    axios
+      .put(url + "?id=" + id, {
+        cancion: cancion.value,
+        artista: artista.value,
+        tono: tono.value,
+        link: link.value,
+      })
+      .then(() => {
+        getData();
+        document.getElementById("agregar").style.display = "block";
+        document.getElementById("editar").style.display = "none";
+      });
+  }
+
+  function reproducirCancion(i, id) {
+    //console.log(link)
+    //document.getElementById("video").setAttribute("src", `https://www.youtube.com/embed/${link}`);
+    axios.get("http://localhost:3000/video" + "?id=" + id).then((data) => {
+      console.log(data.data);
+      document.getElementById("video").setAttribute("src", data.data);
+    });
+  }
+</script>
